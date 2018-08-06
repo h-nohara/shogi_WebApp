@@ -1,0 +1,214 @@
+<html>
+<HTML lang="ja">
+
+<head>
+    <script type="text/javascript" src="/static/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="/static/ShogiBoard.js"></script>
+    <script type="text/javascript" src="/static/ActionHistory.js"></script>
+</head>
+
+<body>
+
+    <script>
+        // ロードされた時
+        window.onload = function(){
+            Board = new ShogiBoard();
+            History = new HistoryHandler();
+        }
+    </script>
+
+
+
+    <style>
+        body {
+            display: grid;
+            grid-gap: 1vw;
+            grid-template-columns: 40vw 10vw 30vw;
+        }
+
+    </style>
+
+
+
+    <div id="main_sub_board">
+        <div id="sub_board_gote" class="sub_board">
+        </div>
+
+        <div id="main_board" class="grid">
+        </div>
+
+        <div id="sub_board_sente" class="sub_board">
+        </div>
+
+    </div>
+
+    <style>
+        #main_sub_board{
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+
+
+
+    <style>
+        #main_board {
+            width: 100%;
+            height: 70vh;
+            background-color: aqua;
+            margin: 0;
+            padding: 0;
+        }
+        #main_board.OneSquare {height: 100%; width: 100%; padding: 0; margin: 0;}
+        /* #main_board button {height: 100%; width: 100%; padding: 0; margin: 0;} */
+        .grid {
+            display: grid;
+            grid-gap: 0px;
+            grid-template-rows: repeat(9, 11%);
+            grid-template-columns: repeat(9, 11%);
+        }
+    </style>
+
+    <style>
+        .sub_board{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 12%;
+            background-color: brown;
+
+            display: grid;
+            grid-gap: 0;
+            grid-template-columns: repeat(7, 13%);
+        }
+
+        .PieceInHand {
+            margin: 0;
+            padding: 0;
+            height: 70%;
+        }
+    </style>
+
+
+    <div id="history_scroll">
+    </div>
+
+    <style>
+        #history_scroll{
+            background-color: antiquewhite;
+            margin: 0;
+            padding: 0;
+            overflow: scroll;
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+
+
+    <div id="Right">
+
+        <button id="AddAction">アクションを追加</button>
+        
+
+        <div id="TextAction" class="action_kind">
+            <div id="TextAction_title" class="action_header_text">
+                <p>テキスト</p>
+            </div>
+
+            <input type="text" id="TextAction_text_box" class="action_contents">
+            
+        </div>
+
+        <div id="LightUpAction" class="action_kind">
+            <div id="LightUpAction_title" class="action_header">
+                <div class="action_title"><p>ライトアップ</p></div>
+                <div><button class="one_action_add_button">＋</button></div>
+            </div>
+            <div id="LightUpAction_buttons" class="action_contents">
+                <p>ここにボタン</p>
+            </div>
+        </div>
+
+        <div id="MarkAction" class="action_kind">
+            <div id="MarkAction_title" class="action_header">
+                <div class="action_title"><p>マーク</p></div>
+                <div><button class="one_action_add_button">＋</button></div>
+            </div>
+            <div id="MarkAction_buttons" class="action_contents">
+                <p>ここにボタン</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #Right {
+            background-color: darkkhaki;
+
+            display: grid;
+            grid-gap: 0;
+            grid-template-rows: repeat(4, 15vh);
+        }
+    </style>
+
+    <style>
+        #AddAction {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: red;
+        }
+
+        .action_kind {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: azure;
+        }
+
+        .action_header {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 30%;
+            border: solid 0.02px;
+
+            display: grid;
+            grid-gap: 0;
+            grid-template-columns: 90% 10%;
+        }
+
+        button.one_action_add_button{
+            margin: 0;
+            padding: 0;
+            background-color: red;
+            height: 100%;
+            width: 100%;
+        }
+
+
+        .action_contents {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 70%;
+        }
+
+        #TextAction_text_box input{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 90%;
+        }
+    </style>
+
+
+
+</body>
+
+</html>
