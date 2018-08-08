@@ -52,6 +52,12 @@ class ShogiBoard {
         this.now_touched_loc = null;
         this.now_legal_moves = [];
 
+
+        // アクションを足している最中かどうか
+        this.now_is_adding_action = false;
+        this.now_is_adding_kind = null;  // "LightUp" or "Mark"
+
+
         // 初期配置を描画
         this.draw_main_board_base();
         this.draw_sub_board_base();
@@ -181,68 +187,86 @@ class ShogiBoard {
 
     child_clicked(Loc){
 
-        console.log("now legal moves was");
-        console.log(this.now_legal_moves);
-        console.log("clicked :" + Loc);
+        // もしアクションを足している最中だったら
 
-        // 事前に駒がクリックされていた時
-        if (this.now_is_touched){
+        if (this.now_is_adding_action){
 
-            console.log("year, was touched");
+            let el = "#" + this.now_is_adding_kind + "Action_buttons";
+            let before_text = $(el + " p").text();
 
-            // 移動可能な場所がクリックされたら
-            if ((this.now_legal_moves.indexOf(Loc) >= 0) || (this.now_legal_moves.indexOf(Loc + "+") >= 0)){
-
-                console.log("I can move there!");
-
-                // 成るか成らないか選べる時は選択ウィンドウを出し、その後の処理はウィンドウウィジェット側で行う
-                if ((this.now_legal_moves.indexOf(Loc) >= 0) && (this.now_legal_moves.indexOf(Loc+"+") >= 0)){
-
-                    this.check_nari(this.now_touched_loc, Loc);
-                }
-
-                // 選べない時
-                else{
-
-                    // 成れない時は自動でそのまま
-
-                    // 必ず成らなければいけない時
-                    if ((this.now_legal_moves.indexOf(Loc) == -1) && (this.now_legal_moves.indexOf(Loc+"+") >= 0)){
-                        Loc = Loc + "+";
-                    }
-
-                    // todo
-                    this.push_and_reflect_and_init_user_state(this.now_touched_loc, Loc);
-                }
-            }
-
-            // 移動可能でない場所がクリックされたら
-            else {
-
-                console.log("oh , I cant move there");
-                
-                // 背景を元に戻す
-                $(".OneSquare").css("background-color", this.default_color);
-
-                // ユーザの操作状況を反映
-                this.now_touched_loc = Loc;
-
-                // todo
-                this.draw_legal_moves(Loc);
-            }
+            if (before_text != ""){before_text += ",";}
+            let after_text = before_text + Loc;
+            $(el + " p").text(after_text);
         }
 
-
-        // どこもクリックされていなかった時
+        // そうでなく、普通の駒の操作だったら
 
         else{
 
-            console.log("not touched");
-            
-            // ユーザの操作状況を反映
-            this.now_is_touched = true;
-            this.now_touched_loc = Loc;
-            this.draw_legal_moves(Loc);
+            console.log("now legal moves was");
+            console.log(this.now_legal_moves);
+            console.log("clicked :" + Loc);
+
+            // 事前に駒がクリックされていた時
+            if (this.now_is_touched){
+
+                console.log("year, was touched");
+
+                // 移動可能な場所がクリックされたら
+                if ((this.now_legal_moves.indexOf(Loc) >= 0) || (this.now_legal_moves.indexOf(Loc + "+") >= 0)){
+
+                    console.log("I can move there!");
+
+                    // 成るか成らないか選べる時は選択ウィンドウを出し、その後の処理はウィンドウウィジェット側で行う
+                    if ((this.now_legal_moves.indexOf(Loc) >= 0) && (this.now_legal_moves.indexOf(Loc+"+") >= 0)){
+
+                        this.check_nari(this.now_touched_loc, Loc);
+                    }
+
+                    // 選べない時
+                    else{
+
+                        // 成れない時は自動でそのまま
+
+                        // 必ず成らなければいけない時
+                        if ((this.now_legal_moves.indexOf(Loc) == -1) && (this.now_legal_moves.indexOf(Loc+"+") >= 0)){
+                            Loc = Loc + "+";
+                        }
+
+                        // todo
+                        this.push_and_reflect_and_init_user_state(this.now_touched_loc, Loc);
+                    }
+                }
+
+                // 移動可能でない場所がクリックされたら
+                else {
+
+                    console.log("oh , I cant move there");
+                    
+                    // 背景を元に戻す
+                    $(".OneSquare").css("background-color", this.default_color);
+
+                    // ユーザの操作状況を反映
+                    this.now_touched_loc = Loc;
+
+                    // todo
+                    this.draw_legal_moves(Loc);
+                }
+            }
+
+
+            // どこもクリックされていなかった時
+
+            else{
+
+                console.log("not touched");
+                
+                // ユーザの操作状況を反映
+                this.now_is_touched = true;
+                this.now_touched_loc = Loc;
+                this.draw_legal_moves(Loc);
+            }
+
         }
 
     }

@@ -111,7 +111,11 @@
 
     <div id="Right">
 
-        <button id="AddAction">アクションを追加</button>
+        <div id="AddDelAction">
+            <div><button id="AddAction">追加</button></div>
+            <div><button id="DelAction">削除</button></div>
+        </div>
+
         
 
         <div id="TextAction" class="action_kind">
@@ -126,23 +130,52 @@
         <div id="LightUpAction" class="action_kind">
             <div id="LightUpAction_title" class="action_header">
                 <div class="action_title"><p>ライトアップ</p></div>
-                <div><button class="one_action_add_button">＋</button></div>
+                <div><button id="adding_LightUp" class="one_action_add_button">＋</button></div>
+                <div><button id="reflesh_LightUp" class="one_action_reflesh_button">ー</button></div>
             </div>
             <div id="LightUpAction_buttons" class="action_contents">
-                <p>ここにボタン</p>
+                <p></p>
             </div>
         </div>
 
         <div id="MarkAction" class="action_kind">
             <div id="MarkAction_title" class="action_header">
                 <div class="action_title"><p>マーク</p></div>
-                <div><button class="one_action_add_button">＋</button></div>
+                <div><button id="adding_Mark" class="one_action_add_button">＋</button></div>
+                <div><button id="reflesh_Mark" class="one_action_reflesh_button">ー</button></div>
             </div>
             <div id="MarkAction_buttons" class="action_contents">
-                <p>ここにボタン</p>
+                <p></p>
             </div>
         </div>
+
+        <div><button id="finish">画像生成</button></div>
+
+        <style>
+        #finish {width: 50%; height: 5vh;}
+        </style>
+
     </div>
+
+
+    <script>
+        // 画像生成
+        $(document).on("click", "#finish", function(){
+            console.log(History.history);
+            console.log(JSON.stringify(History.history));
+            $.ajax({
+                url : "/make_images_from_history",
+                type : "POST",
+                data: JSON.stringify(History.history),
+            })
+            .done(function(no_data){
+                console.log("pushed to python make image");
+            })
+            .fail(function(jqXHR, textStatus, errorThrown){
+                console.log("oh my image");
+            })
+        })
+    </script>
 
     <style>
         #Right {
@@ -155,12 +188,31 @@
     </style>
 
     <style>
-        #AddAction {
+        #AddDelAction {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+
+            display: grid;
+            grid-gap: 0;
+            grid-template-columns: 70% 30%;
+        }
+
+        #AddAction{
+            margin: 0;
+            padding: 0;
             background-color: red;
+            height: 100%;
+            width: 100%;
+        }
+
+        #DelAction{
+            margin: 0;
+            padding: 0;
+            background-color: blue;
+            height: 100%;
+            width: 100%;
         }
 
         .action_kind {
@@ -180,13 +232,21 @@
 
             display: grid;
             grid-gap: 0;
-            grid-template-columns: 90% 10%;
+            grid-template-columns: 70% 20% 10%;
         }
 
         button.one_action_add_button{
             margin: 0;
             padding: 0;
             background-color: red;
+            height: 100%;
+            width: 100%;
+        }
+
+        button.one_action_reflesh_button{
+            margin: 0;
+            padding: 0;
+            background-color: blue;
             height: 100%;
             width: 100%;
         }

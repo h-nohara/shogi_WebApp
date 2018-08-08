@@ -5,7 +5,7 @@ class HistoryHandler{
         this.history = [{"move" : "initial"}];
         this.now_clicked_id = "ActionButton_0";
 
-        this.only_action_id = [];
+        this.only_move_id = [];
 
         this.update_view();
 
@@ -13,7 +13,7 @@ class HistoryHandler{
 
     update_view(){
 
-        this.only_action_id = [];
+        this.only_move_id = [];
 
         $("#history_scroll").empty();  // 子要素を全て削除
         var parent = document.getElementById("history_scroll");
@@ -35,7 +35,7 @@ class HistoryHandler{
             // もし移動だったら
             if (keys.indexOf("move") >= 0){
                 var button_text = action["move"];
-                this.only_action_id.push(button_id);  // アクションのリストに加える
+                this.only_move_id.push(button_id);  // 移動アクションのリストに加える
             }
             else{
 
@@ -70,13 +70,22 @@ class HistoryHandler{
                 let message_keys = Object.keys(message_action);
 
                 // テキスト
+                var el = "#TextAction_text_box";
                 if (message_keys.indexOf("text") >= 0){
-                    $("#TextAction_text_box").val(message_action["text"]);
-                }else{$("#TextAction_text_box").val("");}
+                    $(el).val(message_action["text"]);
+                }else{$(el).val("");}
 
                 // ライトアップ
+                var el = "#LightUpAction_buttons p";
+                if (message_keys.indexOf("light_up") >= 0){
+                    $(el).text(message_action["light_up"].join(","));
+                }else{$(el).val("");}
 
                 // マーク
+                var el = "#MarkAction_buttons p"
+                if (message_keys.indexOf("mark") >= 0){
+                    $(el).text(message_action["mark"].join(","));
+                }else{$(el).val("");}
             }
 
             // そうじゃなかったら全て空白
@@ -176,7 +185,7 @@ $(document).on("click", ".OneAction", function(){
         // python側のBOARDをここ場面にする
 
         let latest_PushAction_id = get_latest_PushAction_id(this.id);
-        let latest_PushAction_order = History.only_action_id.indexOf(latest_PushAction_id);
+        let latest_PushAction_order = History.only_move_id.indexOf(latest_PushAction_id);
 
         $.ajax(
             {
@@ -202,20 +211,26 @@ $(document).on("click", ".OneAction", function(){
 })
 
 
-// todo
+
+// メッセージアクションをヒストリーに追加
 
 $(document).on("click", "#AddAction", function(){
 
     let text = $("#TextAction_text_box").val();
+    let LightUp_pos = $("#" + "LightUpAction_buttons p").text().split(",");
+    let Mark_pos = $("#" + "MarkAction_buttons p").text().split(",");
 
     let action = {"message" : {}};
 
     if (text != null){
         action["message"]["text"] = text;
     }
-
-    // ライトアップ
-    // マーク
+    if (LightUp_pos.length > 0){
+        action["message"]["light_up"] = LightUp_pos;
+    }
+    if (Mark_pos.length > 0){
+        action["message"]["mark"] = Mark_pos;
+    }
 
     History.add_action(action);
 })
@@ -223,11 +238,85 @@ $(document).on("click", "#AddAction", function(){
 
 // todo
 function action_view_null(){
-    console.log(")))))))))))))))))))))))))))))");
     $("#TextAction_text_box").val("");
-    // ライトアップ
-    // マーク
+    $("#LightUpAction_buttons p").text("");
+    $("#MarkAction_buttons p").text("");
 }
+
+
+// アクションを足すボタンを押した時
+$(document).on("click", ".one_action_add_button", function(){
+    Board.now_is_adding_action = !Board.now_is_adding_action;
+    if (Board.now_is_adding_action){
+        $(".OneSquare").css("background-color", "gold");
+        let adding_action_kind = this.id.split("_")[1];
+        Board.now_is_adding_kind = adding_action_kind;
+    }
+    else{
+        $(".OneSquare").css("background-color", Board.default_color);
+    }
+})
+
+
+// アクションを消すボタンを押した時
+$(document).on("click", "#DelAction", function(){
+
+    let watching_id = History.now_clicked_id;
+    let watching_number = Number(watching_id.split("_")[1]);
+    let watching_action = History.history[watching_number];
+
+    if (watching_number == 0){
+        window.alert("０番目は消去できません");
+        exit;
+    }
+
+
+    // もし駒の移動アクションだったら、
+    // それが最新じゃなかったら以降も削除
+    // 移動オンリーのリストから消して、python側も削除
+
+    if (Object.keys(watching_action).indexOf("move") >= 0){
+
+        // historyリストからそれ以降を削除
+        History.history = History.history.slice(0, watching_number);
+
+        // only_moveからそれ以降を削除
+        let move_order = History.only_move_id.indexOf(watching_id);
+        History.only_move_id = History.only_move_id.slice(0, move_order);
+
+        // pytyhon側の移動アクションからそれ以降を削除
+        $.ajax(
+            {
+            url : "/update_board_history/" + String(move_order),
+            type : 'GET',
+            })
+            .done(function(no_data){
+                console.log("success pushed to python update_BOARD_HISTORY");
+            })
+            .fail(function(jqXHR, textStatus, errorThrown){
+                console.log("failed update BOARD_HISTORY");
+            });
+        
+    }
+
+    else if (Object.keys(watching_action).indexOf("message") >= 0){
+        // historyリストからそれを削除
+        History.history.splice(watching_number, 1);
+    }
+
+    else{
+        window.alert("oioi");
+    }
+
+    // 画面を更新
+    History.now_clicked_id = "ActionButton_" + String(watching_number - 1);
+    History.update_view();
+
+    // 盤面を更新
+    Board.draw_main_board();
+
+})
+
 
 
 // 指定したidから遡って、一番最近（遅い）moveアクションを探してidを返す

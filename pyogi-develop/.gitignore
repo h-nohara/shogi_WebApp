@@ -1,0 +1,16 @@
+*~
+__pycache__/
+.cache/
+.ipynb_checkpoints/
+*.pyc
+*.csv
+*.so
+*.c
+build/
+*.html
+*.sqlite3
+.coverage
+
+*.egg-info/
+dist/
+ci/*.txt

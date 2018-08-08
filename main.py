@@ -17,6 +17,8 @@ import json
 import shogi
 from util import get_piece_from_board, get_pieces_in_hand, locs_normal, loc_usi2normal, loc_normal2usi, PieceNames_normal_NotNari, PieceName_normal2kanji
 
+from history_to_images import history_to_images
+
 
 
 def decode_to_dict(request):
@@ -108,6 +110,7 @@ def get_legal_moves(board, loc):
     return legal_moves_the_piece_destination
 
 
+#######################################################
 
 
 @app.route("/")
@@ -181,6 +184,40 @@ def fly_to(history_order):
     BOARD = copy.deepcopy(BOARD_HISTORY[int(history_order)])
 
     return "hoge"
+
+
+@app.route("/make_images_from_history", methods=["POST"])
+def make_images_from_history():
+
+    print("="*10)
+    history = decode_to_dict(request)
+
+    # なぜかmoveの「＋」が抜けてしまうので、対策
+    for i in range(len(history)):
+        one_action = history[i]
+        if "move" in one_action.keys():
+            if len(one_action["move"]) == 5:
+                history[i]["move"] = history[i]["move"][:4] + "+"
+                
+    save_dir = "./testing/"
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    os.makedirs(save_dir)
+    history_to_images(history, save_dir)
+
+    return "hoge"
+
+
+@app.route("/update_board_history/<del_number>")
+def update_board_history(del_number):
+    
+    global BOARD_HISTORY
+    BOARD_HISTORY = BOARD_HISTORY[:int(del_number)]
+    global BOARD
+    BOARD = BOARD_HISTORY[-1]
+
+    return "hoge"
+
     
     
 if __name__ == "__main__":
