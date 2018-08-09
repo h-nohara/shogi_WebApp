@@ -10,10 +10,10 @@ import shogi.CSA
 
 
 from plot_board import numnum2csa
-from make_shogi_movie import Action, Message, Scenario
+from make_shogi_movie import Action, Message, Scenario, StateRecorder
 
 
-def history_to_images(history, save_dir):
+def history_to_images(history, BOARD_HISTORY, save_dir):
     
     reveived_history = history
     print(history)
@@ -21,9 +21,9 @@ def history_to_images(history, save_dir):
 
     # Boardオブジェクト
     board = shogi.Board()
-    print(board)
-
     actions = []
+    board_recorder = StateRecorder()
+
     
     for one_action in reveived_history:
         
@@ -83,8 +83,16 @@ def history_to_images(history, save_dir):
             
             actions.append(Action(message=the_message_obj))
 
+        elif "fly_to" in keys:
+            
+            number = int(one_action["fly_to"])
+            key = "move_{}".format(str(number))
+            board_recorder[key] = BOARD_HISTORY[number]
+            actions.append(Action(fly_to=key))
 
-    sc = Scenario(board=board, actions=actions, save_dir=save_dir)  # メインシナリオ
+
+    sc = Scenario(board=board, actions=actions, save_dir=save_dir, is_main=True)  # メインシナリオ
+    sc.StateRecorder = board_recorder
 
     # シナリオに従って、各局面を画像で保存
     sc.do_all()

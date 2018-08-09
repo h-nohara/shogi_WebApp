@@ -181,11 +181,26 @@ def fly_to(history_order):
     
     print("receiving fly_to")
     global BOARD
+    global BOARD_HISTORY
     BOARD = copy.deepcopy(BOARD_HISTORY[int(history_order)])
 
     return "hoge"
 
 
+# BOARD_HISTORYを特定の箇所以降を削除する
+@app.route("/update_board_history/<del_number>")
+def update_board_history(del_number):
+    
+    global BOARD_HISTORY
+    BOARD_HISTORY = BOARD_HISTORY[:int(del_number)]
+    global BOARD
+    BOARD = BOARD_HISTORY[-1]
+
+    return "hoge"
+
+
+
+# HistoryをJSから受け取り、それを元に画像を生成する
 @app.route("/make_images_from_history", methods=["POST"])
 def make_images_from_history():
 
@@ -203,20 +218,12 @@ def make_images_from_history():
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.makedirs(save_dir)
-    history_to_images(history, save_dir)
 
-    return "hoge"
-
-
-@app.route("/update_board_history/<del_number>")
-def update_board_history(del_number):
-    
     global BOARD_HISTORY
-    BOARD_HISTORY = BOARD_HISTORY[:int(del_number)]
-    global BOARD
-    BOARD = BOARD_HISTORY[-1]
+    history_to_images(history, BOARD_HISTORY, save_dir)
 
     return "hoge"
+
 
     
     

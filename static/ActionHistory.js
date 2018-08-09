@@ -43,6 +43,11 @@ class HistoryHandler{
                 if (keys.indexOf("message") >= 0){
                     var button_text = "message";
                 }
+                // fly_toがあったら
+                else if (keys.indexOf("fly_to") >= 0){
+                    var button_text = "fly_to : " + String(action["fly_to"]);
+                    this.only_move_id.push(button_id);  // 移動アクションのリストに加える
+                }
             }
 
             // アクションボタンを作成
@@ -100,30 +105,48 @@ class HistoryHandler{
         
         let now_touched_number = Number(this.now_clicked_id.split("_")[1]);
 
+
+        // actionをhistoryのどこに付け加えるか //
+
+
         // もし今参照しているアクションが最新だったら
         if (now_touched_number == this.history.length-1){
             this.history.push(action);
         }
         // 最新でなかったら
         else{
-            // 駒の移動だったら
+            // moveだったら
             if (Object.keys(action).indexOf("move") >= 0){
                 window.alert("kora!");
+                exit;
             }
-            // 駒の移動以外
-            else{
+            // message
+            else if (Object.keys(action).indexOf("message") >= 0){
                 // 現在参照しているアクションの後ろに追加
                 this.history.splice(now_touched_number+1, 0, action);
             }
+            // fly_to
+            else if (Object.keys(action).indexOf("fly_to") >= 0){
+                this.history.push(action);
+            }
         }
 
-        // 付け加えたやつを参照 : 今参照しているアクションの下に付け加えるので、idは必ず以下のようになる
-        this.now_clicked_id = "ActionButton_" + String(now_touched_number+1);
+
+        // ユーザがどこを参照しているようにするのか //
+
+        if (Object.keys(action).indexOf("fly_to") >= 0){
+            // fly_toなら最新のを参照する
+            this.now_clicked_id = "ActionButton_" + String(this.history.length-1);
+        }
+        else{
+            // 付け加えたやつを参照 : 今参照しているアクションの下に付け加えるので、idは必ず以下のようになる
+            this.now_clicked_id = "ActionButton_" + String(now_touched_number+1);
+        }
         
 
 
-        // todo もしmove（盤面）だったら、pythonの履歴に追加してもらう（現在は後ろに追加するのみ）
-        if (Object.keys(action).indexOf("move") >= 0){
+        // todo もしmove or fly_toだったら、pythonの履歴に追加してもらう（現在は後ろに追加するのみ）
+        if ((Object.keys(action).indexOf("move") >= 0) || (Object.keys(action).indexOf("fly_to") >= 0)){
 
             $.ajax({
                 url : "/memorize_board_history",
@@ -184,7 +207,7 @@ $(document).on("click", ".OneAction", function(){
 
         // python側のBOARDをここ場面にする
 
-        let latest_PushAction_id = get_latest_PushAction_id(this.id);
+        let latest_PushAction_id = get_latest_PushorFlyToAction_id(this.id);
         let latest_PushAction_order = History.only_move_id.indexOf(latest_PushAction_id);
 
         $.ajax(
@@ -236,6 +259,43 @@ $(document).on("click", "#AddAction", function(){
 })
 
 
+// fly_toアクションを追加
+
+// pythonのBOARDを現在見ているのと同じ盤面に -> History.add_action
+
+$(document).on("click", "#add_FlyTo", function(){
+
+    let the_clicked_id = History.now_clicked_id;
+    let move_order = Number(History.only_move_id.indexOf(the_clicked_id));
+
+    // 現在参照しているのがmessageだったらエラーを出す
+    if (Object.keys(History.history[Number(the_clicked_id.split("_")[1])]).indexOf("message") > 0){
+        window.alert("メッセージのところにfly_toは追加できません");
+        exit;
+    }
+
+    $.ajax(
+        {
+        url : "/fly_to/" + move_order,
+        type : 'GET',
+        })
+        .done(function(no_data){
+            console.log("pushed to python the fly_to");
+
+            // 盤面を反映
+            Board.get_board_from_server();
+
+            // historyに加えて、history画面も更新
+            let action = {"fly_to" : move_order};
+            History.add_action(action);
+
+        })
+        .fail(function(jqXHR, textStatus, errorThrown){
+            console.log("failed fly_to");
+        });
+})
+
+
 // todo
 function action_view_null(){
     $("#TextAction_text_box").val("");
@@ -271,11 +331,11 @@ $(document).on("click", "#DelAction", function(){
     }
 
 
-    // もし駒の移動アクションだったら、
+    // もしmove or fly_toだったら、
     // それが最新じゃなかったら以降も削除
     // 移動オンリーのリストから消して、python側も削除
 
-    if (Object.keys(watching_action).indexOf("move") >= 0){
+    if ((Object.keys(watching_action).indexOf("move") >= 0) || (Object.keys(watching_action).indexOf("fly_to") >= 0)){
 
         // historyリストからそれ以降を削除
         History.history = History.history.slice(0, watching_number);
@@ -299,6 +359,7 @@ $(document).on("click", "#DelAction", function(){
         
     }
 
+    // メッセージだったら
     else if (Object.keys(watching_action).indexOf("message") >= 0){
         // historyリストからそれを削除
         History.history.splice(watching_number, 1);
@@ -319,17 +380,18 @@ $(document).on("click", "#DelAction", function(){
 
 
 
-// 指定したidから遡って、一番最近（遅い）moveアクションを探してidを返す
-function get_latest_PushAction_id(action_id){
+// 指定したidから遡って、一番最近（遅い）moveアクションもしくはfly_toアクションを探してidを返す
+function get_latest_PushorFlyToAction_id(action_id){
     
     let id_number = Number(action_id.split("_")[1]);
     let action = History.history[id_number];
 
-    if (Object.keys(action).indexOf("move") >= 0){
+    if ((Object.keys(action).indexOf("move") >= 0) || (Object.keys(action).indexOf("fly_to") >= 0)){
         return action_id;
     }
     else{
-        return get_latest_PushAction_id(action_id.split("_")[0] + "_" + String(id_number-1));
+        return get_latest_PushorFlyToAction_id(action_id.split("_")[0] + "_" + String(id_number-1));
     }
 
 }
+
